@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUME · Client Intelligence Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF0EA;
+    --paper:#FFFFFF;
+    --line:#D9DCD1;
+    --ink:#1B231E;
+    --ink-soft:#5B6358;
+    --confirmed:#2F6F5E;
+    --confirmed-bg:#E4EEE9;
+    --reported:#3B5B8C;
+    --reported-bg:#E6EBF4;
+    --inference:#B7862E;
+    --inference-bg:#F6EEDC;
+    --missing:#8A8478;
+    --missing-bg:#EFEDE7;
+    --risk-high:#B23A2E;
+    --risk-high-bg:#F6E2DF;
+    --risk-med:#C97A3A;
+    --risk-med-bg:#F7E9D9;
+    --risk-low:#8A8478;
+    --risk-low-bg:#EFEDE7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;margin-bottom:28px;flex-wrap:wrap;gap:10px;
+  }
+  .masthead h1{
+    font-family:'Fraunces',serif;font-weight:700;font-size:28px;margin:0;letter-spacing:-0.01em;
+  }
+  .masthead .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.08em;
+  }
+  .layout{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start;}
+  @media (max-width:900px){.layout{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:18px;
+  }
+  .panel h2{
+    font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 4px;
+  }
+  .panel p.hint{font-size:12px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5;}
+  textarea{
+    width:100%;height:420px;resize:vertical;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.55;
+    border:1px solid var(--line);border-radius:2px;padding:10px;
+    background:#FBFBF9;color:var(--ink);
+  }
+  button.primary{
+    margin-top:12px;width:100%;padding:11px;border:none;border-radius:2px;
+    background:var(--ink);color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    cursor:pointer;letter-spacing:.01em;
+  }
+  button.primary:disabled{opacity:.5;cursor:default;}
+  button.primary:hover:not(:disabled){background:#000;}
+
+  .status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:10px;min-height:16px;}
+  .error{color:var(--risk-high);}
+
+  .empty-state{
+    background:var(--paper);border:1px dashed var(--line);border-radius:2px;
+    padding:60px 24px;text-align:center;color:var(--ink-soft);font-size:13px;
+  }
+
+  .summary-card{
+    background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--ink);
+    border-radius:2px;padding:20px;margin-bottom:20px;
+  }
+  .summary-card .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);
+  }
+  .summary-card p{font-family:'Fraunces',serif;font-size:17px;line-height:1.55;margin:8px 0 0;}
+
+  .section-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink-soft);margin:26px 0 10px;display:flex;align-items:center;gap:8px;
+  }
+  .section-label::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:700px){.cards-grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;
+    position:relative;padding:14px 14px 14px 18px;overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
+  }
+  .card.tier-confirmed_fact::before{background:var(--confirmed);}
+  .card.tier-client_reported::before{background:var(--reported);}
+  .card.tier-ai_inference::before{background:var(--inference);}
+  .card.tier-missing_data::before{background:var(--missing);}
+
+  .card .cat{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);}
+  .card .val{font-family:'Fraunces',serif;font-size:15.5px;margin:5px 0 8px;line-height:1.4;}
+  .card.tier-missing_data .val{color:var(--ink-soft);font-style:italic;}
+
+  .chip{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;
+    padding:2px 8px;border-radius:10px;letter-spacing:.02em;
+  }
+  .chip.tier-confirmed_fact{background:var(--confirmed-bg);color:var(--confirmed);}
+  .chip.tier-client_reported{background:var(--reported-bg);color:var(--reported);}
+  .chip.tier-ai_inference{background:var(--inference-bg);color:var(--inference);}
+  .chip.tier-missing_data{background:var(--missing-bg);color:var(--missing);}
+
+  .evidence-toggle{
+    background:none;border:none;padding:0;margin-top:9px;font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;color:var(--ink-soft);cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+  }
+  .evidence{
+    display:none;margin-top:8px;padding:8px 10px;background:#FAF9F6;border:1px dashed var(--line);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5;color:var(--ink-soft);
+  }
+  .evidence.open{display:block;}
+  .evidence .q{margin:0 0 4px;}
+  .evidence .q:last-child{margin-bottom:0;}
+  .evidence .q b{color:var(--ink);font-style:normal;}
+
+  .review-row{display:flex;gap:6px;margin-top:10px;}
+  .review-row button{
+    flex:1;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;padding:6px 4px;
+    border-radius:2px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+  }
+  .review-row button.approve.active{background:var(--confirmed-bg);border-color:var(--confirmed);color:var(--confirmed);}
+  .review-row button.edit.active{background:var(--inference-bg);border-color:var(--inference);color:var(--inference);}
+  .review-row button.reject.active{background:var(--risk-high-bg);border-color:var(--risk-high);color:var(--risk-high);}
+  .edit-box{display:none;margin-top:8px;}
+  .edit-box.open{display:block;}
+  .edit-box textarea{height:60px;font-size:12px;}
+  .stamp{
+    position:absolute;top:10px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:9px;
+    letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;
+    border-radius:2px;transform:rotate(3deg);
+  }
+  .stamp.approved{color:var(--confirmed);}
+  .stamp.rejected{color:var(--risk-high);}
+  .stamp.edited{color:var(--inference);}
+
+  .risk-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:14px 16px;margin-bottom:10px;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .risk-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex:none;}
+  .risk-dot.high{background:var(--risk-high);}
+  .risk-dot.medium{background:var(--risk-med);}
+  .risk-dot.low{background:var(--risk-low);}
+  .risk-card .rt{font-weight:600;font-size:13.5px;}
+  .risk-card .rr{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+  .risk-sev{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;
+    padding:1px 7px;border-radius:9px;letter-spacing:.05em;flex:none;
+  }
+  .risk-sev.high{background:var(--risk-high-bg);color:var(--risk-high);}
+  .risk-sev.medium{background:var(--risk-med-bg);color:var(--risk-med);}
+  .risk-sev.low{background:var(--risk-low-bg);color:var(--risk-low);}
+
+  .next-action{
+    background:var(--ink);color:#fff;border-radius:2px;padding:20px;margin-top:26px;
+  }
+  .next-action .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:#B9C4B6;}
+  .next-action p{font-family:'Fraunces',serif;font-size:17px;margin:8px 0 6px;line-height:1.5;}
+  .next-action .rationale{font-size:12.5px;color:#C7D0C4;line-height:1.5;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0 4px;}
+  .legend span{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;}
+  .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .json-toggle{
+    margin-top:30px;font-family:'IBM Plex Mono',monospace;font-size:11px;background:none;border:1px solid var(--line);
+    color:var(--ink-soft);padding:6px 12px;border-radius:2px;cursor:pointer;
+  }
+  pre#jsonView{
+    display:none;background:#1B231E;color:#D8E4D0;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    padding:16px;border-radius:2px;margin-top:10px;overflow-x:auto;line-height:1.6;
+  }
+  pre#jsonView.open{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>FUME · Client Intelligence</h1>
+    <div class="tag">Weekly conversation → structured coach intelligence</div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>Conversation input</h2>
+      <p class="hint">Paste a coach–client thread (as anonymised text), or just use the sample thread already loaded below. Click "Load sample analysis" for an instant offline result — no API key required.</p>
+      <textarea id="convoInput"></textarea>
+      <button class="primary" id="demoBtn" style="background:var(--confirmed)">Load sample analysis (offline, no key needed)</button>
+      <p class="hint" style="margin-top:10px;">Or run it live against the Claude API. This needs an API key — the live call only works with credentials, which a downloaded file doesn't have on its own.</p>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-... (optional, kept in-memory only)"
+        style="width:100%;padding:8px;border:1px solid var(--line);border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:8px;">
+      <button class="primary" id="analyzeBtn">Analyze with Claude API</button>
+      <div class="status" id="statusLine"></div>
+    </div>
+
+
+    <div id="output">
+      <div class="empty-state">Run an analysis to generate the weekly client intelligence report.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAMPLE = `Day 1
+Client: Good morning. Slept only around 5 hours last night. Daughter had exams, so I was awake late.
+Client: Did some mopping, sweeping, Surya Namaskar and walking inside the house.
+Client: Generally feeling happy today.
+Coach: Good. Please keep sharing your daily updates for water, sleep, steps, exercise and meals.
+Client: Had tea and some soaked nuts.
+Client: Lunch was kadhi with soya and green vegetables.
+Coach: Did you have salad before lunch?
+Client: No. I still need to stock vegetables properly. Will do it tomorrow.
+Client: Feeling some acidity since morning.
+Coach: Did it start after eating something?
+Client: No. Slept very late and did a lot of work today. Got up with acidity.
+Coach: Did you walk after meals?
+Client: Yes, around 15 minutes.
+
+Day 2
+Client: Walk and water done.
+Client: Can I have banana stem, mint and ginger juice?
+Coach: Yes.
+Client: Tea 1 cup and 1 apple.
+Client: Didn't eat much in the evening. Just a small piece of paneer.
+Client: Still having acidity and bloating.
+Coach: Please don't skip meals completely. Try to keep the meals simple.
+
+Day 3
+Client: I had to go to school after a few days. Very hectic morning.
+Client: Coconut water, tea, prunes and some seeds till now.
+Coach: Nothing else till now?
+Client: No. I didn't get time.
+Coach: Slowly we need to adjust the routine around your school schedule also.
+Client: Yes. I know it will take time.
+Client: Lunch had lots of vegetables, curd and some protein.
+Client: Forgot ACV today. Not yet in the habit.
+Coach: Set a reminder around meal timings.
+Client: Yes, will do.
+Accountability Coach: Today's update: Water 4 litres, Sleep 5 hours, Steps around 8,000, Exercise only walking.
+
+Day 4
+Client: Breakfast was 1.5 vegetable chapatis with seeds and ajwain.
+Client: One cup tea.
+Client: 4,500 steps so far.
+Coach: Did you carry lunch to school?
+Client: Yes.
+Client: ACV done today.
+Client: Lunch done. Trying to eat slowly.
+Coach: Good. Chew properly and avoid rushing meals.
+Client: Did around 20 minutes walking, stretching and breathing today. Feeling really good.
+
+Day 5
+Client: Weight seems slightly up even though I'm eating almost half of what I used to eat.
+Coach: It is not always about eating less. Your body needs adequate nutrition.
+Coach: Protein seems low in breakfast on some days.
+Client: I didn't have sprouts today. Have ordered them.
+Coach: You can also have boiled chana, moong or chhole.
+Client: Forgot to mention, I had roasted chana at school.
+Client: Did 20 minutes stretching and running.
+
+Day 6
+Client: Yesterday energy was very good. Today feeling low again.
+Client: Bloating is back and I feel like I have gained weight.
+Coach: Food intake was low today. Protein was also missing.
+Client: I had roasted chana and kala chana.
+Client: I am not getting enough time to plan meals. Next week should be easier.
+Coach: That could be one of the main barriers right now. Let's keep the plan practical.
+
+Day 7
+Client: Steps 6,000 today.
+Client: Sleep around 5.5 hours.
+Client: Did mopping and sweeping also, lots of movement.
+Client: Breakfast and lunch were okay.
+Client: Sorry I missed your call. There was a stressful situation at work.
+Accountability Coach: Tried calling you. Please update when free.
+Client: Had a very hectic day today.
+Client: There is a lot of office pressure and politics going on.
+Client: During a meeting today I was so tired that my head went down on the table and I actually slept for a few seconds.
+Client: Feeling very low.
+Client: I feel I can sleep for days.
+Coach: That sounds like a very exhausting day. Please rest today. We also need to look at your sleep and stress more carefully.
+
+Day 8
+Client: Slept better last night, around 8 hours.
+Client: Energy feels much better today.
+Client: Water around 3.5 litres.
+Client: Did 30 minutes exercise.
+Client: Steps around 8,000.
+Client: Weight is around 83 kg. Waist almost same.
+Client: Still having bloating on and off.
+Client: But overall energy is much better than before.
+Coach: That is good progress. Let's continue tracking sleep, bloating, meals and movement consistently.`;
+
+document.getElementById('convoInput').value = SAMPLE;
+
+const SYSTEM_PROMPT = `You are a client-intelligence analyst for fitness/wellness coaches. You will be given a raw coach-client conversation transcript covering roughly one week.
+
+Your job is to extract STRUCTURED, GROUNDED intelligence for the coach. You must never invent information that is not present in the transcript.
+
+For every finding, assign exactly one confidence_tier from this closed set:
+- "confirmed_fact": stated as an objective logged data point (e.g. an explicit numeric update, typically from an accountability/tracking message), not just casual client chat.
+- "client_reported": the client (or coach) said it in the conversation, but it is self-reported and not independently verified.
+- "ai_inference": you are inferring a pattern, trend, or judgment (e.g. "adherence is inconsistent", "possible early burnout signs") by synthesizing multiple messages. This is your reasoning, not something anyone stated directly.
+- "missing_data": the category was not covered in the transcript for some/all of the period. Say so explicitly rather than guessing.
+
+Rules:
+1. Never fabricate numbers (steps, litres, hours, kg) that are not explicitly present in the text.
+2. Every finding except missing_data findings must include at least one short verbatim evidence quote (under 15 words) copied exactly from the transcript, with the day label if available.
+3. Do not state inferred causal relationships (e.g. "stress caused the bloating") as fact — only as ai_inference, using hedged language ("may be linked to", "possible connection").
+4. If information conflicts across days (e.g. client claims consistency early, then admits skipping meals later), reflect the conflict rather than only the more favorable statement.
+5. Keep every "value" field to one concise sentence. Keep the weekly_summary to 2-3 sentences.
+6. Output ONLY valid JSON matching the schema below. No markdown fences, no preamble, no commentary outside the JSON.
+
+Schema:
+{
+  "weekly_summary": string,
+  "findings": [
+    {
+      "id": string (slug),
+      "category": one of ["nutrition_adherence","exercise_steps","sleep","water_intake","symptoms_stress","engagement_level","key_barriers","pending_actions"],
+      "label": short human-readable label,
+      "value": one-sentence finding,
+      "confidence_tier": one of ["confirmed_fact","client_reported","ai_inference","missing_data"],
+      "evidence": [{"quote": string, "day": string}]
+    }
+  ],
+  "risk_flags": [
+    {"flag": string, "severity": one of ["high","medium","low"], "rationale": string, "confidence_tier": string, "evidence":[{"quote":string,"day":string}]}
+  ],
+  "recommended_next_action": {
+    "action": string,
+    "rationale": string,
+    "confidence_tier": one of ["client_reported","ai_inference"]
+  }
+}
+
+Produce exactly one finding per category listed above (8 findings total), plus 1-3 risk_flags, plus one recommended_next_action. Be concise — this output must fit within a strict token budget.`;
+
+const CATEGORY_ORDER = ["nutrition_adherence","exercise_steps","sleep","water_intake","symptoms_stress","engagement_level","key_barriers","pending_actions"];
+const CATEGORY_TITLES = {
+  nutrition_adherence:"Nutrition adherence", exercise_steps:"Exercise / steps", sleep:"Sleep",
+  water_intake:"Water intake", symptoms_stress:"Symptoms / stress", engagement_level:"Engagement level",
+  key_barriers:"Key barriers", pending_actions:"Pending actions"
+};
+const TIER_LABEL = {confirmed_fact:"Confirmed", client_reported:"Client-reported", ai_inference:"AI inference", missing_data:"Missing"};
+
+let lastData = null;
+
+const DEMO_DATA = {
+  "weekly_summary": "The client stayed engaged with daily check-ins throughout the week and showed a genuine recovery in energy and sleep by Day 8, but the week also included recurring bloating/acidity, several low-protein or skipped meals, and a high-stress Day 7 in which she briefly fell asleep during a work meeting after several nights of only 5-5.5 hours of sleep. Meal planning remains difficult to fit around her school-drop-off schedule.",
+  "findings": [
+    {
+      "id": "nutrition-adherence",
+      "category": "nutrition_adherence",
+      "label": "Nutrition adherence",
+      "value": "Adherence was inconsistent: protein and breakfast intake were low on multiple days, and habits like ACV and sprouts were missed despite reminders.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {"quote": "Protein seems low in breakfast on some days", "day": "Day 5 (Coach)"},
+        {"quote": "Forgot ACV today. Not yet in the habit.", "day": "Day 3"}
+      ]
+    },
+    {
+      "id": "exercise-steps",
+      "category": "exercise_steps",
+      "label": "Exercise / steps",
+      "value": "Daily movement continued throughout the week (walking, stretching, household activity) with steps ranging roughly 4,500-8,000, but no structured workout beyond walking and light stretching.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {"quote": "4,500 steps so far", "day": "Day 4"},
+        {"quote": "Steps around 8,000", "day": "Day 3 (Accountability Coach)"}
+      ]
+    },
+    {
+      "id": "sleep",
+      "category": "sleep",
+      "label": "Sleep",
+      "value": "Sleep was short on most days (around 5-5.5 hours) and improved to about 8 hours only on Day 8, alongside a same-week episode of falling asleep briefly at work.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {"quote": "Slept only around 5 hours last night", "day": "Day 1"},
+        {"quote": "Slept better last night, around 8 hours", "day": "Day 8"}
+      ]
+    },
+    {
+      "id": "water-intake",
+      "category": "water_intake",
+      "label": "Water intake",
+      "value": "Water intake was only explicitly logged on two of eight days (4L and 3.5L); most days have no reported figure.",
+      "confidence_tier": "missing_data",
+      "evidence": [
+        {"quote": "Water 4 litres", "day": "Day 3 (Accountability Coach)"},
+        {"quote": "Water around 3.5 litres", "day": "Day 8"}
+      ]
+    },
+    {
+      "id": "symptoms-stress",
+      "category": "symptoms_stress",
+      "label": "Symptoms / stress",
+      "value": "Acidity and bloating recurred across the week (Days 1, 2, 5, 6, 8), and Day 7 included a distinct high-stress episode with acute exhaustion at work.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {"quote": "Still having acidity and bloating", "day": "Day 2"},
+        {"quote": "my head went down on the table and I actually slept for a few seconds", "day": "Day 7"}
+      ]
+    },
+    {
+      "id": "engagement-level",
+      "category": "engagement_level",
+      "label": "Engagement level",
+      "value": "Engagement was generally high, with daily proactive updates, though the client missed one coach call on Day 7 during a stressful day at work.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {"quote": "Sorry I missed your call. There was a stressful situation at work.", "day": "Day 7"}
+      ]
+    },
+    {
+      "id": "key-barriers",
+      "category": "key_barriers",
+      "label": "Key barriers",
+      "value": "Main barriers were a hectic school-related morning schedule and insufficient time to plan or stock meals in advance.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {"quote": "I am not getting enough time to plan meals", "day": "Day 6"},
+        {"quote": "I still need to stock vegetables properly", "day": "Day 1"}
+      ]
+    },
+    {
+      "id": "pending-actions",
+      "category": "pending_actions",
+      "label": "Pending actions",
+      "value": "Open items include stocking vegetables (mentioned Day 1, not confirmed done), sprouts on order as of Day 5, and building a consistent ACV habit.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {"quote": "Will do it tomorrow", "day": "Day 1"},
+        {"quote": "Have ordered them", "day": "Day 5"}
+      ]
+    }
+  ],
+  "risk_flags": [
+    {
+      "flag": "Possible early fatigue / burnout signs",
+      "severity": "high",
+      "rationale": "A week of consistently short sleep (around 5-5.5 hours on several days) culminated in the client briefly falling asleep during a work meeting and reporting feeling very low, which may be linked to accumulated sleep debt and work stress rather than a single bad day.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {"quote": "I actually slept for a few seconds", "day": "Day 7"},
+        {"quote": "I feel I can sleep for days", "day": "Day 7"}
+      ]
+    },
+    {
+      "flag": "Recurring bloating/acidity not resolving",
+      "severity": "medium",
+      "rationale": "Bloating and acidity were reported on at least four separate days without clear resolution, alongside inconsistent protein intake, which may be linked but was never established as causal in the conversation.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {"quote": "Bloating is back and I feel like I have gained weight", "day": "Day 6"}
+      ]
+    },
+    {
+      "flag": "Meal planning disrupted by school schedule",
+      "severity": "low",
+      "rationale": "The client explicitly named her school-related schedule as a recurring obstacle to consistent meal planning.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {"quote": "Very hectic morning", "day": "Day 3"}
+      ]
+    }
+  ],
+  "recommended_next_action": {
+    "action": "Schedule a short live check-in (call, not just async messages) focused specifically on sleep load, work stress, and realistic meal-planning logistics around the school schedule.",
+    "rationale": "The Day 7 exhaustion episode and the recurring bloating pattern are the kind of findings that benefit from a real conversation rather than continued asynchronous tracking, since the underlying causes (stress, time constraints) haven't surfaced clearly through daily text updates alone.",
+    "confidence_tier": "ai_inference"
+  }
+};
+
+function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function evidenceHtml(ev){
+  if(!ev || !ev.length) return '<div class="evidence"><p class="q" style="font-style:italic">No evidence available.</p></div>';
+  return '<div class="evidence">' + ev.map(e => `<p class="q"><b>${esc(e.day||'—')}:</b> "${esc(e.quote)}"</p>`).join('') + '</div>';
+}
+
+function findingCard(f, idx){
+  const tier = f.confidence_tier || "missing_data";
+  return `
+  <div class="card tier-${tier}" data-idx="${idx}">
+    <div class="cat">${esc(CATEGORY_TITLES[f.category] || f.category)}</div>
+    <div class="val">${esc(f.value)}</div>
+    <span class="chip tier-${tier}">${TIER_LABEL[tier]||tier}</span>
+    <button class="evidence-toggle" onclick="this.nextElementSibling.classList.toggle('open')">Show evidence</button>
+    ${evidenceHtml(f.evidence)}
+    <div class="review-row">
+      <button class="approve" onclick="setReview(this,'approved')">Approve</button>
+      <button class="edit" onclick="setReview(this,'edited')">Edit</button>
+      <button class="reject" onclick="setReview(this,'rejected')">Reject</button>
+    </div>
+    <div class="edit-box"><textarea placeholder="Coach's corrected value..."></textarea></div>
+  </div>`;
+}
+
+window.setReview = function(btn, status){
+  const row = btn.parentElement;
+  const card = row.parentElement;
+  row.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  let stamp = card.querySelector('.stamp');
+  if(stamp) stamp.remove();
+  const s = document.createElement('div');
+  s.className = 'stamp ' + status;
+  s.textContent = status === 'edited' ? 'edited' : status;
+  card.appendChild(s);
+  const editBox = card.querySelector('.edit-box');
+  editBox.classList.toggle('open', status === 'edited');
+};
+
+function riskCard(r){
+  const sev = r.severity || "low";
+  return `<div class="risk-card">
+    <span class="risk-dot ${sev}"></span>
+    <div style="flex:1">
+      <div class="rt">${esc(r.flag)}</div>
+      <div class="rr">${esc(r.rationale)}</div>
+    </div>
+    <span class="risk-sev ${sev}">${sev}</span>
+  </div>`;
+}
+
+function render(data){
+  lastData = data;
+  const findings = data.findings || [];
+  let html = '';
+
+  html += `<div class="summary-card"><div class="eyebrow">Weekly client summary</div><p>${esc(data.weekly_summary||'')}</p></div>`;
+
+  html += `<div class="legend">
+    <span><i style="background:var(--confirmed)"></i>Confirmed fact</span>
+    <span><i style="background:var(--reported)"></i>Client-reported</span>
+    <span><i style="background:var(--inference)"></i>AI inference</span>
+    <span><i style="background:var(--missing)"></i>Missing data</span>
+  </div>`;
+
+  html += `<div class="section-label">Client intelligence</div>`;
+  html += `<div class="cards-grid">` + findings.map((f,i)=>findingCard(f,i)).join('') + `</div>`;
+
+  const risks = data.risk_flags || [];
+  html += `<div class="section-label">Risk / attention flags</div>`;
+  html += risks.length ? risks.map(riskCard).join('') : `<div class="empty-state">No risk flags identified.</div>`;
+
+  if(data.recommended_next_action){
+    const a = data.recommended_next_action;
+    html += `<div class="next-action">
+      <div class="eyebrow">Recommended next action for the coach · ${TIER_LABEL[a.confidence_tier]||a.confidence_tier||''}</div>
+      <p>${esc(a.action)}</p>
+      <div class="rationale">${esc(a.rationale)}</div>
+    </div>`;
+  }
+
+  html += `<button class="json-toggle" onclick="document.getElementById('jsonView').classList.toggle('open')">View structured JSON output</button>
+  <pre id="jsonView">${esc(JSON.stringify(data, null, 2))}</pre>`;
+
+  document.getElementById('output').innerHTML = html;
+}
+
+document.getElementById('demoBtn').addEventListener('click', () => {
+  document.getElementById('statusLine').classList.remove('error');
+  document.getElementById('statusLine').textContent = 'Loaded pre-computed analysis for the sample transcript (offline, no API call).';
+  render(DEMO_DATA);
+});
+
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('analyzeBtn');
+  const statusLine = document.getElementById('statusLine');
+  const convo = document.getElementById('convoInput').value.trim();
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  if(!convo){ statusLine.textContent = 'Paste a conversation first.'; return; }
+  if(!apiKey){
+    statusLine.classList.add('error');
+    statusLine.textContent = 'This mode needs an Anthropic API key (opened outside claude.ai, this file has no credentials of its own). Use "Load sample analysis" for an offline demo, or paste a key above.';
+    return;
+  }
+
+  btn.disabled = true;
+  statusLine.textContent = 'Analyzing conversation…';
+  statusLine.classList.remove('error');
+  document.getElementById('output').innerHTML = '<div class="empty-state">Running analysis…</div>';
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: "Transcript:\n\n" + convo }]
+      })
+    });
+    if(!response.ok){
+      const errBody = await response.text();
+      throw new Error(`API returned ${response.status}: ${errBody.slice(0,200)}`);
+    }
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === "text");
+    if(!textBlock) throw new Error("No text response from model.");
+    let clean = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    const parsed = JSON.parse(clean);
+    render(parsed);
+    statusLine.textContent = 'Analysis complete. Review each finding below.';
+  }catch(err){
+    console.error(err);
+    statusLine.textContent = 'Error: ' + err.message + ' — try "Load sample analysis" for an offline demo instead.';
+    statusLine.classList.add('error');
+    document.getElementById('output').innerHTML = '<div class="empty-state">Live analysis failed. Try "Load sample analysis" above, or check your API key.</div>';
+  }finally{
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+{
+  "weekly_summary": "The client stayed engaged with daily check-ins throughout the week and showed a genuine recovery in energy and sleep by Day 8, but the week also included recurring bloating/acidity, several low-protein or skipped meals, and a high-stress Day 7 in which she briefly fell asleep during a work meeting after several nights of only 5-5.5 hours of sleep. Meal planning remains difficult to fit around her school-drop-off schedule.",
+  "findings": [
+    {
+      "id": "nutrition-adherence",
+      "category": "nutrition_adherence",
+      "label": "Nutrition adherence",
+      "value": "Adherence was inconsistent: protein and breakfast intake were low on multiple days, and habits like ACV and sprouts were missed despite reminders.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {
+          "quote": "Protein seems low in breakfast on some days",
+          "day": "Day 5 (Coach)"
+        },
+        {
+          "quote": "Forgot ACV today. Not yet in the habit.",
+          "day": "Day 3"
+        } 
+      ]
+    },
+    {
+      "id": "exercise-steps",
+      "category": "exercise_steps",
+      "label": "Exercise / steps",
+      "value": "Daily movement continued throughout the week (walking, stretching, household activity) with steps ranging roughly 4,500-8,000, but no structured workout beyond walking and light stretching.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {
+          "quote": "4,500 steps so far",
+          "day": "Day 4"
+        },
+        {
+          "quote": "Steps around 8,000",
+          "day": "Day 3 (Accountability Coach)"
+        }
+      ]
+    },
+    {
+      "id": "sleep",
+      "category": "sleep",
+      "label": "Sleep",
+      "value": "Sleep was short on most days (around 5-5.5 hours) and improved to about 8 hours only on Day 8, alongside a same-week episode of falling asleep briefly at work.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {
+          "quote": "Slept only around 5 hours last night",
+          "day": "Day 1"
+        },
+        {
+          "quote": "Slept better last night, around 8 hours",
+          "day": "Day 8"
+        }
+      ]
+    },
+    {
+      "id": "water-intake",
+      "category": "water_intake",
+      "label": "Water intake",
+      "value": "Water intake was only explicitly logged on two of eight days (4L and 3.5L); most days have no reported figure.",
+      "confidence_tier": "missing_data",
+      "evidence": [
+        {
+          "quote": "Water 4 litres",
+          "day": "Day 3 (Accountability Coach)"
+        },
+        {
+          "quote": "Water around 3.5 litres",
+          "day": "Day 8"
+        }
+      ]
+    },
+    {
+      "id": "symptoms-stress",
+      "category": "symptoms_stress",
+      "label": "Symptoms / stress",
+      "value": "Acidity and bloating recurred across the week (Days 1, 2, 5, 6, 8), and Day 7 included a distinct high-stress episode with acute exhaustion at work.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {
+          "quote": "Still having acidity and bloating",
+          "day": "Day 2"
+        },
+        {
+          "quote": "my head went down on the table and I actually slept for a few seconds",
+          "day": "Day 7"
+        }
+      ]
+    },
+    {
+      "id": "engagement-level",
+      "category": "engagement_level",
+      "label": "Engagement level",
+      "value": "Engagement was generally high, with daily proactive updates, though the client missed one coach call on Day 7 during a stressful day at work.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {
+          "quote": "Sorry I missed your call. There was a stressful situation at work.",
+          "day": "Day 7"
+        }
+      ]
+    },
+    {
+      "id": "key-barriers",
+      "category": "key_barriers",
+      "label": "Key barriers",
+      "value": "Main barriers were a hectic school-related morning schedule and insufficient time to plan or stock meals in advance.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {
+          "quote": "I am not getting enough time to plan meals",
+          "day": "Day 6"
+        },
+        {
+          "quote": "I still need to stock vegetables properly",
+          "day": "Day 1"
+        }
+      ]
+    },
+    {
+      "id": "pending-actions",
+      "category": "pending_actions",
+      "label": "Pending actions",
+      "value": "Open items include stocking vegetables (mentioned Day 1, not confirmed done), sprouts on order as of Day 5, and building a consistent ACV habit.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {
+          "quote": "Will do it tomorrow",
+          "day": "Day 1"
+        },
+        {
+          "quote": "Have ordered them",
+          "day": "Day 5"
+        }
+      ]
+    }
+  ],
+  "risk_flags": [
+    {
+      "flag": "Possible early fatigue / burnout signs",
+      "severity": "high",
+      "rationale": "A week of consistently short sleep (around 5-5.5 hours on several days) culminated in the client briefly falling asleep during a work meeting and reporting feeling very low, which may be linked to accumulated sleep debt and work stress rather than a single bad day.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {
+          "quote": "I actually slept for a few seconds",
+          "day": "Day 7"
+        },
+        {
+          "quote": "I feel I can sleep for days",
+          "day": "Day 7"
+        }
+      ]
+    },
+    {
+      "flag": "Recurring bloating/acidity not resolving",
+      "severity": "medium",
+      "rationale": "Bloating and acidity were reported on at least four separate days without clear resolution, alongside inconsistent protein intake, which may be linked but was never established as causal in the conversation.",
+      "confidence_tier": "ai_inference",
+      "evidence": [
+        {
+          "quote": "Bloating is back and I feel like I have gained weight",
+          "day": "Day 6"
+        }
+      ]
+    },
+    {
+      "flag": "Meal planning disrupted by school schedule",
+      "severity": "low",
+      "rationale": "The client explicitly named her school-related schedule as a recurring obstacle to consistent meal planning.",
+      "confidence_tier": "client_reported",
+      "evidence": [
+        {
+          "quote": "Very hectic morning",
+          "day": "Day 3"
+        }
+      ]
+    }
+  ],
+  "recommended_next_action": {
+    "action": "Schedule a short live check-in (call, not just async messages) focused specifically on sleep load, work stress, and realistic meal-planning logistics around the school schedule.",
+    "rationale": "The Day 7 exhaustion episode and the recurring bloating pattern are the kind of findings that benefit from a real conversation rather than continued asynchronous tracking, since the underlying causes (stress, time constraints) haven't surfaced clearly through daily text updates alone.",
+    "confidence_tier": "ai_inference"
+  }
+}
